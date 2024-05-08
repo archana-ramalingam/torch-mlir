@@ -254,6 +254,12 @@ def aten〇log〡shape(self: List[int]) -> List[int]:
 def aten〇log_sigmoid〡shape(self: List[int]) -> List[int]:
     return upstream_shape_functions.unary(self)
 
+def aten〇hardshrink〡shape(self: List[int], lambd: float = 0.5) -> List[int]:
+    return upstream_shape_functions.unary(self)
+
+def aten〇softshrink〡shape(self: List[int], lambd: float = 0.5) -> List[int]:
+    return upstream_shape_functions.unary(self)
+
 def aten〇mish〡shape(self: List[int]) -> List[int]:
     return upstream_shape_functions.unary(self)
 
@@ -331,6 +337,26 @@ def prims〇convert_element_type〡shape(a: List[int], dtype: int) -> List[int]:
 def aten〇grid_sampler〡shape(input: List[int], grid: List[int], interpolation_mode: int, padding_mode: int, align_corners: bool) -> List[int]:
     output = [input[0],input[1],grid[1],grid[2]]
     return output
+
+def aten〇__interpolate〇size_list_scale_list〡shape(input: List[int], size: Optional[List[int]] = None, scale_factor: Optional[List[float]] = None, mode: str = "nearest", align_corners: Optional[bool] = None, recompute_scale_factor: Optional[bool] = None, antialias: bool = False) -> List[int]:
+    output = [input[0], input[1]]
+    if size is not None:
+        assert (
+          scale_factor is None
+        ), "Must specify exactly one of size and scale_factor"
+        output.append(size[0])
+        output.append(size[1])
+        return output
+    elif scale_factor is not None:
+        assert (
+          size is None
+        ), "Must specify exactly one of size and scale_factor"
+        output.append(int(scale_factor[0] * input[2]))
+        output.append(int(scale_factor[1] * input[3]))
+        return output
+    assert 0, "Either size or scale_factor must be presented"
+    return output
+
 
 def prims〇collapse〡shape(a: List[int], start: int, end: int) -> List[int]:
     # Obtained through trial and error on a few examples in PyTorch:
@@ -2098,6 +2124,18 @@ def aten〇log_sigmoid〡dtype(self_rank_dtype: Tuple[int, int]) -> int:
     assert not self_dtype == torch.bool
     return self_dtype
 
+@check_dtype_function(_check_tensors_with_the_same_dtype(num_of_tensors=1, lambd=0.5))
+def aten〇hardshrink〡dtype(self_rank_dtype: Tuple[int, int], lambd: Union[int, float, complex] = 0.5) -> int:
+    self_rank, self_dtype = self_rank_dtype
+    if self_dtype == torch.bool:
+        return torch.int64
+    return self_dtype
+
+@check_dtype_function(_check_tensors_with_the_same_dtype(num_of_tensors=1, lambd=0.5))
+def aten〇softshrink〡dtype(self_rank_dtype: Tuple[int, int], lambd: Union[int, float, complex] = 0.5) -> int:
+    self_rank, self_dtype = self_rank_dtype
+    return _get_dtype_of_floating_point_op(self_dtype)
+
 @check_dtype_function(_check_tensors_with_the_same_dtype(num_of_tensors=1))
 def aten〇logit〡dtype(self_rank_dtype: Tuple[int, int], eps: Optional[float] = None) -> int:
     self_rank, self_dtype = self_rank_dtype
@@ -2310,6 +2348,10 @@ def aten〇constant_pad_nd〡dtype(self_rank_dtype: Tuple[int, int], pad: List[i
 def aten〇grid_sampler〡dtype(input_rank_dtype: Tuple[int, int], grid_rank_dtype: Tuple[int, int], interpolation_mode: int, padding_mode: int, align_corners: bool) -> int:
     input_rank, input_dtype = input_rank_dtype
     grid_rank, grid_dtype = input_rank_dtype
+    return input_dtype
+
+def aten〇__interpolate〇size_list_scale_list〡dtype(input_rank_dtype: Tuple[int, int], size: Optional[List[int]] = None, scale_factor: Optional[List[float]] = None, mode: str = "nearest", align_corners: Optional[bool] = None, recompute_scale_factor: Optional[bool] = None, antialias: bool = False) -> int:
+    input_rank, input_dtype = input_rank_dtype
     return input_dtype
 
 @check_dtype_function([ErrorInvocation(TensorOfShape(2, 3, 4), padding=1),

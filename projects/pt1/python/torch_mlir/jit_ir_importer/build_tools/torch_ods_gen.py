@@ -480,6 +480,8 @@ def emit_ops(emitter_td: TextEmitter, registry: Registry):
     emit("aten::isclose : (Tensor, Tensor, float, float, bool) -> (Tensor)")
     emit("aten::glu : (Tensor, int) -> (Tensor)")
     emit("aten::log_sigmoid : (Tensor) -> (Tensor)")
+    emit("aten::hardshrink : (Tensor, Scalar) -> (Tensor)")
+    emit("aten::softshrink : (Tensor, Scalar) -> (Tensor)")
 
     # Ops with dynamic number of outputs
     emit("aten::unbind_copy.int : (Tensor, int) -> (Tensor[])")
@@ -594,7 +596,8 @@ def emit_ops(emitter_td: TextEmitter, registry: Registry):
     emit("aten::max_pool1d : (Tensor, int[], int[], int[], int[], bool) -> (Tensor)")
     emit("aten::max_pool2d : (Tensor, int[], int[], int[], int[], bool) -> (Tensor)")
     emit(
-        "aten::max_pool2d_with_indices : (Tensor, int[], int[], int[], int[], bool) -> (Tensor, Tensor)"
+        "aten::max_pool2d_with_indices : (Tensor, int[], int[], int[], int[], bool) -> (Tensor, Tensor)",
+        has_canonicalizer=True,
     )
     emit(
         "aten::max_pool2d_with_indices_backward : (Tensor, Tensor, int[], int[], int[], int[], bool, Tensor) -> (Tensor)"
@@ -630,6 +633,9 @@ def emit_ops(emitter_td: TextEmitter, registry: Registry):
     )
     emit_with_mutating_variants(
         "aten::masked_scatter : (Tensor, Tensor, Tensor) -> (Tensor)"
+    )
+    emit(
+        "aten::__interpolate.size_list_scale_list : (Tensor, int[]?, float[]?, str, bool?, bool?, bool) -> (Tensor)"
     )
     emit("aten::adaptive_avg_pool1d : (Tensor, int[]) -> (Tensor)")
     emit("aten::adaptive_avg_pool2d : (Tensor, int[]) -> (Tensor)")
@@ -1104,7 +1110,7 @@ def emit_ops(emitter_td: TextEmitter, registry: Registry):
     # `prims::` namespace.
     # ==========================================================================
 
-    emit("prims::convert_element_type : (Tensor, int) -> (Tensor)")
+    emit("prims::convert_element_type : (Tensor, int) -> (Tensor)", has_folder=True)
     emit("prims::var : (Tensor, int[]?, float, int?) -> (Tensor)")
     emit("prims::sqrt : (Tensor) -> (Tensor)")
     emit("prims::collapse : (Tensor, int, int) -> (Tensor)")
